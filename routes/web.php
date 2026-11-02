@@ -8,6 +8,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseBillController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/purchases', [PurchaseBillController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/create', [PurchaseBillController::class, 'create'])->name('purchases.create');
     Route::post('/purchases', [PurchaseBillController::class, 'store'])->name('purchases.store');
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/movements', [InventoryController::class, 'store'])->name('inventory.movements.store');
     Route::resource('quotations', QuotationController::class);

@@ -15,6 +15,7 @@ class PurchaseBillController extends Controller
     use ResolvesCompany;
 
     public function index() { $company=$this->company(); return view('purchases.index', compact('company'), ['bills'=>PurchaseBill::where('company_id',$company->id)->with('supplier')->latest('bill_date')->paginate(12)]); }
+    public function show(PurchaseBill $purchase) { $this->authorizeBill($purchase); return view('purchases.show', ['company'=>$this->company(), 'bill'=>$purchase->load('company','supplier','items.product','payments')]); }
     public function create() { $company=$this->company(); return view('purchases.form', compact('company'), ['suppliers'=>Supplier::where('company_id',$company->id)->where('is_active',true)->orderBy('company_name')->orderBy('name')->get(), 'products'=>Product::where('company_id',$company->id)->where('is_active',true)->orderBy('name')->get()]); }
     public function store(Request $request)
     {
@@ -32,4 +33,14 @@ class PurchaseBillController extends Controller
         });
         return redirect()->route('purchases.index')->with('success', 'Purchase bill '.$bill->bill_number.' recorded. Stock quantities were updated for product lines.');
     }
+
+    public function recordPayment(Request $request, PurchaseBill $purchase)
+    {
+        $this->authorizeBill($purchase);
+        $data=$request->validate(['payment_date'=>'required|date','amount'=>'required|numeric|gt:0|lte:'.$purchase->balance_due,'method'=>'required|in:cash,bank_transfer,card,cheque,other','reference'=>'nullable|string|max:100','notes'=>'nullable|string']);
+        DB::transaction(function () use ($purchase, $data) { $purchase->payments()->create($data+['company_id'=>$purchase->company_id]); $paid=(float)$purchase->payments()->sum('amount'); $balance=round(max(0,(float)$purchase->total-$paid),3); $purchase->update(['paid_total'=>$paid,'balance_due'=>$balance,'status'=>$balance <= .000?'paid':'partially_paid']); });
+        return back()->with('success','Supplier payment recorded and bill balance updated.');
+    }
+
+    private function authorizeBill(PurchaseBill $bill): void { abort_unless($bill->company_id===$this->company()->id,404); }
 }

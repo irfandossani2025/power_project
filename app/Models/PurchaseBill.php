@@ -13,4 +13,5 @@ class PurchaseBill extends Model
     public function company(): BelongsTo { return $this->belongsTo(Company::class); }
     public function supplier(): BelongsTo { return $this->belongsTo(Supplier::class); }
     public function items(): HasMany { return $this->hasMany(PurchaseBillItem::class)->orderBy('sort_order'); }
+    public function payments(): HasMany { return $this->hasMany(SupplierPayment::class)->latest('payment_date'); }
 }

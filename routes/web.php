@@ -27,6 +27,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/purchases', [PurchaseBillController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/create', [PurchaseBillController::class, 'create'])->name('purchases.create');
     Route::post('/purchases', [PurchaseBillController::class, 'store'])->name('purchases.store');
+    Route::get('/purchases/{purchase}', [PurchaseBillController::class, 'show'])->name('purchases.show');
+    Route::post('/purchases/{purchase}/payments', [PurchaseBillController::class, 'recordPayment'])->name('purchases.payments.store');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
     Route::get('/imports/templates/{type}', [ImportController::class, 'template'])->name('imports.template');

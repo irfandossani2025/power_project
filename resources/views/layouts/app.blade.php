@@ -1,36 +1,3 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-
-        <title>{{ config('app.name', 'Laravel') }}</title>
-
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
-
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
-
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
-        </div>
-    </body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="{{ csrf_token() }}"><title>{{ config('app.name', 'PowerBooks') }}</title><link rel="preconnect" href="https://fonts.bunny.net"><link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800&display=swap" rel="stylesheet"><link rel="stylesheet" href="{{ asset('css/powerbooks.css') }}"><link rel="stylesheet" href="{{ asset('css/powerbooks-extra.css') }}"></head>
+<body><div class="app-shell"><aside class="sidebar" id="sidebar"><a class="brand" href="{{ route('dashboard') }}"><b>P</b><span>Power<span>Books</span></span></a><div class="company-switcher"><i></i>{{ $company->name ?? 'My Business' }}<em>⌄</em></div><nav><p>WORKSPACE</p><a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">▦ Dashboard</a><a class="{{ request()->routeIs('quotations.*') ? 'active' : '' }}" href="{{ route('quotations.index') }}">◫ Quotations</a><p style="margin-top:18px">DIRECTORY</p><a class="{{ request()->routeIs('customers.*') ? 'active' : '' }}" href="{{ route('customers.index') }}">♙ Customers</a><a class="{{ request()->routeIs('products.*') ? 'active' : '' }}" href="{{ route('products.index') }}">□ Items &amp; inventory</a><p style="margin-top:18px">COMING NEXT</p><a href="#" onclick="return false;">▤ Sales invoices <b>Soon</b></a><a href="#" onclick="return false;">▤ Expenses</a><a href="#" onclick="return false;">▤ Reports</a></nav><div class="bottom"><a href="{{ route('profile.edit') }}">⚙ Settings</a></div><footer><i></i> OMR · Oman VAT ready</footer></aside><main><header><button class="mobile-menu" id="menuToggle">☰</button><label class="search">⌕ <input placeholder="Search customers, quotations and items"><kbd>⌘ K</kbd></label><div class="top-actions"><button class="bell">♧<i></i></button><form method="POST" action="{{ route('logout') }}">@csrf<button class="profile" title="Log out"><strong>{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</strong><span><b>{{ auth()->user()->name }}</b><small>Account owner · Log out</small></span></button></form></div></header>@if(session('success'))<div class="flash success">✓ {{ session('success') }}</div>@endif @if($errors->any())<div class="flash error">Please correct the highlighted fields and try again.</div>@endif <section class="content">{{ $slot }}</section></main></div><script src="{{ asset('js/powerbooks.js') }}"></script></body></html>

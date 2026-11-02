@@ -1,17 +1,6 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    {{ __("You're logged in!") }}
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="welcome"><div><p>OVERVIEW · {{ now()->format('F Y') }}</p><h1>Good {{ now()->hour < 12 ? 'morning' : 'afternoon' }}, {{ strtok(auth()->user()->name, ' ') }} <span>👋</span></h1><h2>Here is a clear view of your business today.</h2></div><div class="buttons"><a class="secondary button-link" href="{{ route('customers.create') }}">+ Customer</a><a class="primary button-link" href="{{ route('quotations.create') }}">+ New quotation</a></div></div>
+<div class="metrics"><article class="sales"><div><i>↗</i><b>THIS MONTH</b></div><p>Quoted value</p><h2>OMR {{ number_format($monthTotal, 3) }}</h2><small>All quotations raised this month</small></article><article class="receivable"><div><i>◷</i><b>OPEN</b></div><p>Open quotation value</p><h2>OMR {{ number_format($openTotal, 3) }}</h2><small>Drafts and quotations sent to clients</small></article><article class="stock"><div><i>□</i><b>CATALOGUE</b></div><p>Active items</p><h2>{{ number_format($products) }}</h2><small>Products and services ready to quote</small></article><article class="cash"><div><i>♙</i><b>CONTACTS</b></div><p>Active customers</p><h2>{{ number_format($customers) }}</h2><small>Customers available for new quotations</small></article></div>
+<div class="upper-grid"><section class="panel chart-panel"><div class="panel-title"><div><h2>Sales workspace</h2><p>Start by adding your contacts and items, then create a quotation.</p></div></div><div class="empty-state"><div class="empty-icon">⌁</div><h3>Your books are ready</h3><p>Build your first quotation in minutes. Totals calculate automatically with Oman VAT at 5%.</p><a class="primary button-link" href="{{ route('quotations.create') }}">Create a quotation</a></div></section><section class="panel quotation"><div class="panel-title"><div><h2>Quotation pipeline</h2><p>At a glance</p></div><a href="{{ route('quotations.index') }}">View all</a></div><div class="quote-total"><span>OPEN VALUE</span><b>OMR {{ number_format($openTotal, 3) }}</b><small>Awaiting acceptance or still in draft</small></div><div class="pipeline"><p><span><i></i>Draft</span><b>{{ $recentQuotations->where('status', 'draft')->count() }}</b></p><p><span><i></i>Sent</span><b>{{ $recentQuotations->where('status', 'sent')->count() }}</b></p><p><span><i></i>Accepted</span><b>{{ $recentQuotations->where('status', 'accepted')->count() }}</b></p></div><a class="button-link secondary block-button" href="{{ route('quotations.index') }}">Manage quotations →</a></section></div>
+<section class="panel recent"><div class="panel-title"><div><h2>Recent quotations</h2><p>Latest quotes from your workspace</p></div><a href="{{ route('quotations.index') }}">View all</a></div><div class="scroll"><table><thead><tr><th>NUMBER</th><th>CUSTOMER</th><th>DATE</th><th>TOTAL</th><th>STATUS</th></tr></thead><tbody>@forelse($recentQuotations as $quotation)<tr><td><a href="{{ route('quotations.show', $quotation) }}">{{ $quotation->quotation_number }}</a></td><td>{{ $quotation->customer->company_name ?: $quotation->customer->name }}</td><td>{{ $quotation->quotation_date->format('d M Y') }}</td><td>OMR {{ number_format($quotation->total, 3) }}</td><td><span class="{{ $quotation->status }}">{{ ucfirst($quotation->status) }}</span></td></tr>@empty<tr><td colspan="5" class="table-empty">No quotations yet — create the first one when you are ready.</td></tr>@endforelse</tbody></table></div></section>
 </x-app-layout>

@@ -91,7 +91,21 @@ class QuotationController extends Controller
     private function formData(Quotation $quotation): array
     {
         $company = $this->company();
-        return ['quotation' => $quotation, 'company' => $company, 'customers' => Customer::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get(), 'products' => Product::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get()];
+        return [
+            'quotation' => $quotation,
+            'company' => $company,
+            'customers' => Customer::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get(),
+            'products' => Product::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get(),
+            'quoteItems' => $quotation->items->map(fn ($item) => [
+                'product_id' => $item->product_id,
+                'description' => $item->description,
+                'quantity' => $item->quantity,
+                'unit' => $item->unit,
+                'unit_price' => $item->unit_price,
+                'discount_percentage' => $item->discount_percentage,
+                'vat_rate' => $item->vat_rate,
+            ])->values()->all(),
+        ];
     }
     private function validated(Request $request): array
     {

@@ -18,7 +18,9 @@ return new class extends Migration
             $table->unsignedInteger('rows_read')->default(0);
             $table->unsignedInteger('imported_count')->default(0);
             $table->unsignedInteger('skipped_count')->default(0);
-            $table->json('errors')->nullable();
+            // MariaDB on the managed host predates JSON column support.
+            // Laravel's array cast still serializes this safely as JSON text.
+            $table->longText('errors')->nullable();
             $table->timestamps();
             $table->index(['company_id', 'type', 'created_at']);
         });

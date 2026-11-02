@@ -4,6 +4,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ProductController;
@@ -30,6 +31,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/purchases/{purchase}', [PurchaseBillController::class, 'show'])->name('purchases.show');
     Route::post('/purchases/{purchase}/payments', [PurchaseBillController::class, 'recordPayment'])->name('purchases.payments.store');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/ledger', [LedgerController::class, 'index'])->name('ledger.index');
+    Route::post('/ledger/accounts', [LedgerController::class, 'storeAccount'])->name('ledger.accounts.store');
+    Route::post('/ledger/entries', [LedgerController::class, 'storeEntry'])->name('ledger.entries.store');
     Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
     Route::get('/imports/templates/{type}', [ImportController::class, 'template'])->name('imports.template');
     Route::post('/imports', [ImportController::class, 'store'])->name('imports.store');

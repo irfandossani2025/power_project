@@ -13,13 +13,14 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth','active'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::resource('customers', CustomerController::class)->except('show');
     Route::resource('expenses', ExpenseController::class)->except('show');
@@ -31,9 +32,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/purchases/{purchase}', [PurchaseBillController::class, 'show'])->name('purchases.show');
     Route::post('/purchases/{purchase}/payments', [PurchaseBillController::class, 'recordPayment'])->name('purchases.payments.store');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/ledger', [LedgerController::class, 'index'])->name('ledger.index');
-    Route::post('/ledger/accounts', [LedgerController::class, 'storeAccount'])->name('ledger.accounts.store');
-    Route::post('/ledger/entries', [LedgerController::class, 'storeEntry'])->name('ledger.entries.store');
+    Route::middleware('role:admin,accountant')->group(function () {
+        Route::get('/ledger', [LedgerController::class, 'index'])->name('ledger.index');
+        Route::post('/ledger/accounts', [LedgerController::class, 'storeAccount'])->name('ledger.accounts.store');
+        Route::post('/ledger/entries', [LedgerController::class, 'storeEntry'])->name('ledger.entries.store');
+    });
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
+        Route::patch('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
+    });
     Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
     Route::get('/imports/templates/{type}', [ImportController::class, 'template'])->name('imports.template');
     Route::post('/imports', [ImportController::class, 'store'])->name('imports.store');

@@ -14,4 +14,6 @@ class Company extends Model
     public function quotations(): HasMany { return $this->hasMany(Quotation::class); }
     public function warehouses(): HasMany { return $this->hasMany(Warehouse::class); }
     public function stockMovements(): HasMany { return $this->hasMany(StockMovement::class); }
+    public function suppliers(): HasMany { return $this->hasMany(Supplier::class); }
+    public function purchaseBills(): HasMany { return $this->hasMany(PurchaseBill::class); }
 }

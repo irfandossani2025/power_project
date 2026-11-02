@@ -5,8 +5,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PurchaseBillController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\SupplierController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -17,6 +19,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::resource('customers', CustomerController::class)->except('show');
     Route::resource('products', ProductController::class)->except('show');
+    Route::resource('suppliers', SupplierController::class)->except('show');
+    Route::get('/purchases', [PurchaseBillController::class, 'index'])->name('purchases.index');
+    Route::get('/purchases/create', [PurchaseBillController::class, 'create'])->name('purchases.create');
+    Route::post('/purchases', [PurchaseBillController::class, 'store'])->name('purchases.store');
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/movements', [InventoryController::class, 'store'])->name('inventory.movements.store');
     Route::resource('quotations', QuotationController::class);

@@ -4,7 +4,7 @@
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'PowerBooks') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net"><link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/powerbooks.css') }}"><link rel="stylesheet" href="{{ asset('css/powerbooks-extra.css') }}"><link rel="stylesheet" href="{{ asset('css/powerbooks-auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/powerbooks.css') }}"><link rel="stylesheet" href="{{ asset('css/powerbooks-extra.css') }}"><link rel="stylesheet" href="{{ asset('css/powerbooks-auth.css') }}"><link rel="stylesheet" href="{{ asset('css/powerbooks-auth-controls.css') }}">
 </head>
 <body class="auth-body">
     <main class="auth-shell">
@@ -15,5 +15,5 @@
         </section>
         <section class="auth-panel"><div class="auth-card"><a href="{{ url('/') }}" class="auth-mobile-brand"><b>P</b> Power<span>Books</span></a>{{ $slot }}</div><p class="auth-footer">© {{ now()->year }} PowerBooks · Developed by Irfan Dossani<br>Powered by Mugdi Investments LLC</p></section>
     </main>
-</body>
+<script src="{{ asset('js/powerbooks.js') }}"></script></body>
 </html>

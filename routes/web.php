@@ -5,6 +5,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseBillController;
 use App\Http\Controllers\ProfileController;
@@ -27,6 +28,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/purchases/create', [PurchaseBillController::class, 'create'])->name('purchases.create');
     Route::post('/purchases', [PurchaseBillController::class, 'store'])->name('purchases.store');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
+    Route::get('/imports/templates/{type}', [ImportController::class, 'template'])->name('imports.template');
+    Route::post('/imports', [ImportController::class, 'store'])->name('imports.store');
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/movements', [InventoryController::class, 'store'])->name('inventory.movements.store');
     Route::resource('quotations', QuotationController::class);

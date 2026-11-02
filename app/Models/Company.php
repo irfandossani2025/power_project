@@ -17,4 +17,5 @@ class Company extends Model
     public function suppliers(): HasMany { return $this->hasMany(Supplier::class); }
     public function purchaseBills(): HasMany { return $this->hasMany(PurchaseBill::class); }
     public function expenses(): HasMany { return $this->hasMany(Expense::class); }
+    public function importBatches(): HasMany { return $this->hasMany(ImportBatch::class); }
 }

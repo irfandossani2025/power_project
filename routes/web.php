@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InventoryController;
@@ -19,6 +20,7 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::resource('customers', CustomerController::class)->except('show');
+    Route::resource('expenses', ExpenseController::class)->except('show');
     Route::resource('products', ProductController::class)->except('show');
     Route::resource('suppliers', SupplierController::class)->except('show');
     Route::get('/purchases', [PurchaseBillController::class, 'index'])->name('purchases.index');

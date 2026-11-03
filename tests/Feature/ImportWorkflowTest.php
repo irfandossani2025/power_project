@@ -68,6 +68,17 @@ class ImportWorkflowTest extends TestCase
         $this->assertDatabaseHas('import_batches',['type'=>'historical_bills','imported_count'=>1]);
     }
 
+    public function test_historical_invoice_accepts_a_csv_with_only_the_required_columns(): void
+    {
+        Company::create(['name'=>'My Business']); $user=User::factory()->create();
+        $csv="invoice_number,invoice_date,customer_name,line_description,quantity,unit,unit_price,discount_percentage,vat_rate\nQB-INV-MIN,2025-12-15,Al Noor Trading,Consulting,1,service,100,0,5\n";
+
+        $this->actingAs($user)->post(route('imports.store'),['type'=>'historical_invoices','file'=>UploadedFile::fake()->createWithContent('historical-invoices-minimum.csv',$csv)])->assertRedirect(route('imports.index'));
+
+        $this->assertDatabaseHas('invoices',['invoice_number'=>'QB-INV-MIN','total'=>105,'paid_total'=>0,'balance_due'=>105,'status'=>'issued']);
+        $this->assertDatabaseHas('import_batches',['type'=>'historical_invoices','imported_count'=>1,'skipped_count'=>0]);
+    }
+
     public function test_invalid_historical_invoice_is_fully_rolled_back_and_audited(): void
     {
         Company::create(['name'=>'My Business']); $user=User::factory()->create();

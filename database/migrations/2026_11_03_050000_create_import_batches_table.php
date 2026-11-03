@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->enum('type', ['customers', 'suppliers', 'items']);
+            $table->enum('type', ['customers', 'suppliers', 'items', 'opening_balances']);
             $table->string('original_filename');
             $table->enum('status', ['completed', 'completed_with_errors', 'failed']);
             $table->unsignedInteger('rows_read')->default(0);

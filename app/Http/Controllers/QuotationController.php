@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Http\Controllers\Concerns\ResolvesCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class QuotationController extends Controller
 {
@@ -70,6 +71,7 @@ class QuotationController extends Controller
     public function update(Request $request, Quotation $quotation)
     {
         $this->authorizeQuotation($quotation);
+        $this->ensureCanChange($quotation);
         DB::transaction(function () use ($request, $quotation) {
             $quotation->update($this->validated($request));
             $quotation->items()->delete();
@@ -84,6 +86,7 @@ class QuotationController extends Controller
     public function destroy(Quotation $quotation)
     {
         $this->authorizeQuotation($quotation);
+        $this->ensureCanChange($quotation);
         $quotation->delete();
         return redirect()->route('quotations.index')->with('success', 'Quotation removed.');
     }
@@ -109,7 +112,16 @@ class QuotationController extends Controller
     }
     private function validated(Request $request): array
     {
-        return $request->validate(['customer_id' => 'required|integer', 'quotation_date' => 'required|date', 'valid_until' => 'nullable|date|after_or_equal:quotation_date', 'status' => 'required|in:draft,sent,accepted,rejected,expired,converted', 'notes' => 'nullable|string', 'terms' => 'nullable|string', 'items' => 'required|array|min:1', 'items.*.description' => 'required|string|max:191', 'items.*.quantity' => 'required|numeric|gt:0', 'items.*.unit' => 'required|string|max:20', 'items.*.unit_price' => 'required|numeric|min:0', 'items.*.discount_percentage' => 'nullable|numeric|min:0|max:100', 'items.*.vat_rate' => 'nullable|numeric|min:0|max:100', 'items.*.product_id' => 'nullable|integer']);
+        $data = $request->validate(['customer_id' => 'required|integer', 'quotation_date' => 'required|date', 'valid_until' => 'nullable|date|after_or_equal:quotation_date', 'status' => 'required|in:draft,sent,accepted,rejected,expired', 'notes' => 'nullable|string', 'terms' => 'nullable|string', 'items' => 'required|array|min:1', 'items.*.description' => 'required|string|max:191', 'items.*.quantity' => 'required|numeric|gt:0', 'items.*.unit' => 'required|string|max:20', 'items.*.unit_price' => 'required|numeric|min:0', 'items.*.discount_percentage' => 'nullable|numeric|min:0|max:100', 'items.*.vat_rate' => 'nullable|numeric|min:0|max:100', 'items.*.product_id' => 'nullable|integer']);
+        $company = $this->company();
+        if (! Customer::where('company_id', $company->id)->whereKey($data['customer_id'])->exists()) {
+            throw ValidationException::withMessages(['customer_id' => 'Please select a customer from this business.']);
+        }
+        $productIds = collect($data['items'])->pluck('product_id')->filter()->unique();
+        if ($productIds->isNotEmpty() && Product::where('company_id', $company->id)->whereIn('id', $productIds)->count() !== $productIds->count()) {
+            throw ValidationException::withMessages(['items' => 'Every selected item must belong to this business.']);
+        }
+        return $data;
     }
     private function saveItems(Quotation $quotation, array $items): void
     {
@@ -124,4 +136,10 @@ class QuotationController extends Controller
     }
     private function nextNumber(int $companyId): string { return 'QT-'.now()->format('Y').'-'.str_pad((string) (Quotation::where('company_id', $companyId)->count() + 1), 4, '0', STR_PAD_LEFT); }
     private function authorizeQuotation(Quotation $quotation): void { abort_unless($quotation->company_id === $this->company()->id, 404); }
+    private function ensureCanChange(Quotation $quotation): void
+    {
+        if ($quotation->status === 'converted') {
+            throw ValidationException::withMessages(['status' => 'A converted quotation is locked to preserve its invoice history.']);
+        }
+    }
 }

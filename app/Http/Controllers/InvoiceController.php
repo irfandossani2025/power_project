@@ -23,6 +23,9 @@ class InvoiceController extends Controller
         $company = $this->company(); abort_unless($quotation->company_id === $company->id, 404); $quotation->load('items', 'customer');
         $invoice = DB::transaction(function () use ($company, $quotation) {
             $existing = Invoice::where('quotation_id', $quotation->id)->first(); if ($existing) return $existing;
+            if ($quotation->status !== 'accepted') {
+                abort(422, 'Only accepted quotations can be converted to an invoice.');
+            }
             $invoice = Invoice::create(['company_id'=>$company->id,'customer_id'=>$quotation->customer_id,'quotation_id'=>$quotation->id,'invoice_number'=>$this->nextNumber($company->id),'invoice_date'=>now(),'due_date'=>now()->addDays($quotation->customer->payment_terms_days),'status'=>'issued','currency'=>$quotation->currency,'subtotal'=>$quotation->subtotal,'discount_total'=>$quotation->discount_total,'vat_total'=>$quotation->vat_total,'total'=>$quotation->total,'paid_total'=>0,'balance_due'=>$quotation->total,'notes'=>$quotation->notes,'terms'=>$quotation->terms]);
             foreach ($quotation->items as $item) { $invoice->items()->create($item->only(['product_id','sort_order','description','quantity','unit','unit_price','discount_percentage','vat_rate','line_subtotal','line_vat','line_total'])); if ($item->product_id && $item->product?->type === 'product') StockMovement::create(['company_id'=>$company->id,'product_id'=>$item->product_id,'type'=>'sale','quantity'=>-$item->quantity,'unit_cost'=>$item->product->cost_price,'movement_date'=>now(),'reference'=>$invoice->invoice_number,'notes'=>'Issued on sales invoice '.$invoice->invoice_number,'created_by'=>auth()->id()]); }
             $quotation->update(['status'=>'converted']); app(AccountingPostingService::class)->postInvoice($invoice); return $invoice;

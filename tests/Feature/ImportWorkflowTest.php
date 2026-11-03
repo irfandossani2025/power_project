@@ -56,4 +56,15 @@ class ImportWorkflowTest extends TestCase
         $this->assertDatabaseHas('journal_entries',['source_type'=>'invoice']); $this->assertDatabaseHas('journal_entries',['source_type'=>'customer_payment']);
         $this->assertDatabaseHas('import_batches',['type'=>'historical_invoices','imported_count'=>1]);
     }
+
+    public function test_historical_supplier_bill_csv_creates_bill_payment_and_ledger_entries(): void
+    {
+        Company::create(['name'=>'My Business']); $user=User::factory()->create();
+        $csv="bill_number,bill_date,due_date,supplier_email,supplier_name,line_description,quantity,unit,unit_cost,vat_rate,payment_amount,payment_date,payment_method,payment_reference\nQB-BILL-1001,2025-12-15,2026-01-14,purchases@example.com,Oman Supplies,Office supplies,1,unit,100,5,105,2025-12-15,bank_transfer,QB-PAY-1\nQB-BILL-1001,2025-12-15,2026-01-14,purchases@example.com,Oman Supplies,Delivery,1,job,50,5,,,,\n";
+        $this->actingAs($user)->post(route('imports.store'),['type'=>'historical_bills','file'=>UploadedFile::fake()->createWithContent('historical-bills.csv',$csv)])->assertRedirect(route('imports.index'));
+        $this->assertDatabaseHas('purchase_bills',['bill_number'=>'QB-BILL-1001','total'=>157.5,'paid_total'=>105,'balance_due'=>52.5,'status'=>'partially_paid']);
+        $this->assertDatabaseCount('purchase_bill_items',2); $this->assertDatabaseCount('supplier_payments',1);
+        $this->assertDatabaseHas('journal_entries',['source_type'=>'purchase_bill']); $this->assertDatabaseHas('journal_entries',['source_type'=>'supplier_payment']);
+        $this->assertDatabaseHas('import_batches',['type'=>'historical_bills','imported_count'=>1]);
+    }
 }

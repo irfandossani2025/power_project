@@ -20,6 +20,7 @@ class LedgerWorkflowTest extends TestCase
         $this->actingAs($user)->post(route('ledger.entries.store'), ['entry_date'=>'2026-11-03','reference'=>'OPEN-001','lines'=>[['account_id'=>$cash->id,'debit'=>1000,'credit'=>0],['account_id'=>$equity->id,'debit'=>0,'credit'=>1000]]])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('journal_entries',['reference'=>'OPEN-001']);
         $this->assertDatabaseCount('journal_lines',2);
+        $this->actingAs($user)->get(route('ledger.index'))->assertOk()->assertSee('Trial balance')->assertSee('OMR 1,000.000');
     }
 
     public function test_unbalanced_journal_entry_is_rejected(): void

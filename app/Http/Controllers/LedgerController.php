@@ -15,7 +15,9 @@ class LedgerController extends Controller
     public function index()
     {
         $company=$this->company(); $this->ensureStarterAccounts($company->id);
-        return view('ledger.index',['company'=>$company,'accounts'=>Account::where('company_id',$company->id)->orderBy('code')->get(),'entries'=>JournalEntry::where('company_id',$company->id)->with('lines.account')->latest('entry_date')->latest('id')->paginate(12)]);
+        $accounts=Account::where('company_id',$company->id)->withSum('journalLines as debit_total','debit')->withSum('journalLines as credit_total','credit')->orderBy('code')->get();
+        $trialBalance=$accounts->map(function (Account $account) { $debits=(float)($account->debit_total ?? 0); $credits=(float)($account->credit_total ?? 0); return ['account'=>$account,'debits'=>$debits,'credits'=>$credits,'net_debit'=>max(0,$debits-$credits),'net_credit'=>max(0,$credits-$debits)]; });
+        return view('ledger.index',['company'=>$company,'accounts'=>$accounts,'trialBalance'=>$trialBalance,'trialDebitTotal'=>$trialBalance->sum('net_debit'),'trialCreditTotal'=>$trialBalance->sum('net_credit'),'entries'=>JournalEntry::where('company_id',$company->id)->with('lines.account')->latest('entry_date')->latest('id')->paginate(12)]);
     }
 
     public function storeAccount(Request $request)

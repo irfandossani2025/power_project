@@ -13,7 +13,7 @@
             <div class="auth-copy"><p>ACCOUNTING · INVENTORY · QUOTATIONS</p><h1>Run the day.<br>See the whole business.</h1><span>Clear numbers, professional quotations, and a calm workspace for your team.</span></div>
             <div class="auth-proof"><i>✓</i><span><b>Built for Oman</b><small>OMR and VAT-ready from day one</small></span></div>
         </section>
-        <section class="auth-panel"><div class="auth-card"><a href="{{ url('/') }}" class="auth-mobile-brand"><b>P</b> Power<span>Books</span></a>{{ $slot }}</div><p class="auth-footer">© {{ now()->year }} PowerBooks · Developed by Irfan Dossani<br>Powered by Mugdi Investments LLC</p></section>
+        <section class="auth-panel"><div class="auth-card"><a href="{{ url('/') }}" class="auth-mobile-brand"><b>P</b> Power<span>Books</span></a>{{ $slot }}</div><p class="auth-footer">© {{ now()->year }} PowerBooks<br>Powered by Mugdi Investments LLC</p></section>
     </main>
 <script src="{{ asset('js/powerbooks.js') }}"></script></body>
 </html>

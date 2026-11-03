@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Quotation;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -17,8 +18,9 @@ class InvoiceWorkflowTest extends TestCase
     {
         $company = Company::create(['name' => 'My Business']);
         $customer = Customer::create(['company_id' => $company->id, 'name' => 'Test Customer']);
+        $product = Product::create(['company_id'=>$company->id,'name'=>'Installation kit','type'=>'product','unit'=>'pc','cost_price'=>40,'selling_price'=>100]);
         $quotation = Quotation::create(['company_id'=>$company->id,'customer_id'=>$customer->id,'quotation_number'=>'QT-2026-0001','quotation_date'=>now(),'status'=>'accepted','subtotal'=>100,'vat_total'=>5,'total'=>105]);
-        $quotation->items()->create(['description'=>'Installation service','quantity'=>1,'unit'=>'Service','unit_price'=>100,'vat_rate'=>5,'line_subtotal'=>100,'line_vat'=>5,'line_total'=>105]);
+        $quotation->items()->create(['product_id'=>$product->id,'description'=>'Installation service','quantity'=>1,'unit'=>'Service','unit_price'=>100,'vat_rate'=>5,'line_subtotal'=>100,'line_vat'=>5,'line_total'=>105]);
         $user = User::factory()->create();
 
         $this->actingAs($user)->post(route('quotations.invoice', $quotation))->assertRedirect();
@@ -28,6 +30,7 @@ class InvoiceWorkflowTest extends TestCase
         $this->assertSame('105.000', $invoice->balance_due);
         $this->assertDatabaseHas('journal_entries', ['company_id'=>$company->id, 'source_type'=>'invoice', 'source_id'=>$invoice->id]);
         $this->assertDatabaseHas('journal_lines', ['account_id'=>\App\Models\Account::where('company_id',$company->id)->where('code','1100')->value('id'), 'debit'=>105]);
+        $this->assertDatabaseHas('stock_movements', ['product_id'=>$product->id, 'type'=>'sale', 'quantity'=>-1]);
         $this->actingAs($user)->post(route('invoices.payments.store', $invoice), ['payment_date'=>now()->format('Y-m-d'),'amount'=>105,'method'=>'bank_transfer'])->assertRedirect();
         $this->assertSame('paid', $invoice->fresh()->status);
         $this->assertDatabaseHas('journal_entries', ['company_id'=>$company->id, 'source_type'=>'customer_payment']);

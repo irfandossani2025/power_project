@@ -28,9 +28,12 @@ class AccountingPostingService
 
     public function postInvoice(Invoice $invoice): void
     {
-        $this->post($invoice->company_id, 'invoice', $invoice->id, 'INV-'.$invoice->invoice_number, $invoice->invoice_date, 'Invoice '.$invoice->invoice_number, [
+        $lines = [
             ['1100', $invoice->total, 0], ['4000', 0, (float) $invoice->subtotal - (float) $invoice->discount_total], ['2100', 0, $invoice->vat_total],
-        ]);
+        ];
+        $costOfGoods = $invoice->items()->with('product')->get()->sum(fn ($item) => $item->product?->type === 'product' ? (float) $item->quantity * (float) $item->product->cost_price : 0);
+        if ($costOfGoods > 0) { $lines[] = ['5000', $costOfGoods, 0]; $lines[] = ['1200', 0, $costOfGoods]; }
+        $this->post($invoice->company_id, 'invoice', $invoice->id, 'INV-'.$invoice->invoice_number, $invoice->invoice_date, 'Invoice '.$invoice->invoice_number, $lines);
     }
 
     public function postCustomerPayment(Payment $payment): void
@@ -42,8 +45,11 @@ class AccountingPostingService
 
     public function postPurchaseBill(PurchaseBill $bill): void
     {
+        $items = $bill->items()->with('product')->get();
+        $inventory = (float) $items->sum(fn ($item) => $item->product?->type === 'product' ? $item->line_subtotal : 0);
+        $directCost = (float) $bill->subtotal - $inventory;
         $this->post($bill->company_id, 'purchase_bill', $bill->id, 'BILL-'.$bill->bill_number, $bill->bill_date, 'Supplier bill '.$bill->bill_number, [
-            ['1200', $bill->subtotal, 0], ['1300', $bill->vat_total, 0], ['2000', 0, $bill->total],
+            ['1200', $inventory, 0], ['5000', $directCost, 0], ['1300', $bill->vat_total, 0], ['2000', 0, $bill->total],
         ]);
     }
 

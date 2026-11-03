@@ -13,6 +13,6 @@ class ReportsTest extends TestCase
     public function test_an_authenticated_user_can_open_business_reports(): void
     {
         Company::create(['name' => 'My Business']);
-        $this->actingAs(User::factory()->create())->get(route('reports.index'))->assertOk()->assertSee('Business reports')->assertSee('Oman VAT summary');
+        $this->actingAs(User::factory()->create())->get(route('reports.index'))->assertOk()->assertSee('Business reports')->assertSee('Oman VAT summary')->assertSee('Profit and loss')->assertSee('Balance sheet');
     }
 }

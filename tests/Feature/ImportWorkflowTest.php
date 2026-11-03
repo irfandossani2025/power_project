@@ -18,4 +18,12 @@ class ImportWorkflowTest extends TestCase
         $this->actingAs($user)->post(route('imports.store'),['type'=>'customers','file'=>$file])->assertRedirect(route('imports.index'));
         $this->assertDatabaseHas('customers',['name'=>'Ali','email'=>'ali@example.com']); $this->assertDatabaseHas('import_batches',['type'=>'customers','imported_count'=>1]);
     }
+
+    public function test_supplier_csv_import_creates_suppliers_and_audit_batch(): void
+    {
+        Company::create(['name'=>'My Business']); $user=User::factory()->create();
+        $file=UploadedFile::fake()->createWithContent('suppliers.csv',"name,company_name,email,phone,vat_number,billing_address,payment_terms_days\nSalim,Salim Supplies,salim@example.com,+96890000000,OM2,Muscat,45\n");
+        $this->actingAs($user)->post(route('imports.store'),['type'=>'suppliers','file'=>$file])->assertRedirect(route('imports.index'));
+        $this->assertDatabaseHas('suppliers',['name'=>'Salim','email'=>'salim@example.com']); $this->assertDatabaseHas('import_batches',['type'=>'suppliers','imported_count'=>1]);
+    }
 }

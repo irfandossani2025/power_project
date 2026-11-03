@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
@@ -38,6 +39,8 @@ Route::middleware(['auth','active'])->group(function () {
         Route::post('/ledger/entries', [LedgerController::class, 'storeEntry'])->name('ledger.entries.store');
     });
     Route::middleware('role:admin')->group(function () {
+        Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company.edit');
+        Route::patch('/settings/company', [CompanySettingsController::class, 'update'])->name('settings.company.update');
         Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
         Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
         Route::patch('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');

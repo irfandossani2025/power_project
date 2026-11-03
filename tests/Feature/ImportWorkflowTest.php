@@ -36,4 +36,13 @@ class ImportWorkflowTest extends TestCase
         $this->assertDatabaseHas('journal_entries',['source_type'=>'opening_balance_import','entry_number'=>'QB-OPEN-1']);
         $this->assertDatabaseHas('journal_lines',['debit'=>15000]); $this->assertDatabaseHas('journal_lines',['credit'=>15000]);
     }
+
+    public function test_opening_balance_import_cannot_be_run_twice(): void
+    {
+        Company::create(['name'=>'My Business']); $user=User::factory()->create();
+        $contents="entry_date,account_code,account_name,account_type,debit,credit\n2026-01-01,1000,Cash and bank,asset,15000,0\n2026-01-01,3000,Owner equity,equity,0,15000\n";
+        $this->actingAs($user)->post(route('imports.store'),['type'=>'opening_balances','file'=>UploadedFile::fake()->createWithContent('opening.csv',$contents)]);
+        $this->actingAs($user)->post(route('imports.store'),['type'=>'opening_balances','file'=>UploadedFile::fake()->createWithContent('opening-again.csv',$contents)])->assertSessionHasErrors('file');
+        $this->assertDatabaseCount('journal_entries',1);
+    }
 }

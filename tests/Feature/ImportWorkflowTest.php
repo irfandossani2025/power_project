@@ -45,4 +45,15 @@ class ImportWorkflowTest extends TestCase
         $this->actingAs($user)->post(route('imports.store'),['type'=>'opening_balances','file'=>UploadedFile::fake()->createWithContent('opening-again.csv',$contents)])->assertSessionHasErrors('file');
         $this->assertDatabaseCount('journal_entries',1);
     }
+
+    public function test_historical_invoice_csv_creates_invoice_payment_and_ledger_entries(): void
+    {
+        Company::create(['name'=>'My Business']); $user=User::factory()->create();
+        $csv="invoice_number,invoice_date,due_date,customer_email,customer_name,line_description,quantity,unit,unit_price,discount_percentage,vat_rate,payment_amount,payment_date,payment_method,payment_reference\nQB-INV-1001,2025-12-15,2026-01-14,accounts@example.com,Al Noor Trading,Consulting,1,service,100,0,5,105,2025-12-15,bank_transfer,QB-RCPT-1\nQB-INV-1001,2025-12-15,2026-01-14,accounts@example.com,Al Noor Trading,Support,1,hour,50,0,5,,,,\n";
+        $this->actingAs($user)->post(route('imports.store'),['type'=>'historical_invoices','file'=>UploadedFile::fake()->createWithContent('historical-invoices.csv',$csv)])->assertRedirect(route('imports.index'));
+        $this->assertDatabaseHas('invoices',['invoice_number'=>'QB-INV-1001','total'=>157.5,'paid_total'=>105,'balance_due'=>52.5,'status'=>'partially_paid']);
+        $this->assertDatabaseCount('invoice_items',2); $this->assertDatabaseCount('payments',1);
+        $this->assertDatabaseHas('journal_entries',['source_type'=>'invoice']); $this->assertDatabaseHas('journal_entries',['source_type'=>'customer_payment']);
+        $this->assertDatabaseHas('import_batches',['type'=>'historical_invoices','imported_count'=>1]);
+    }
 }

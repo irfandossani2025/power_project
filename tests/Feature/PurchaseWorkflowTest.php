@@ -22,6 +22,7 @@ class PurchaseWorkflowTest extends TestCase
         $this->actingAs($user)->post(route('purchases.store'), ['supplier_id'=>$supplier->id,'bill_number'=>'BILL-001','bill_date'=>'2026-11-03','items'=>[['product_id'=>$product->id,'description'=>'Socket','quantity'=>10,'unit'=>'pc','unit_cost'=>2,'vat_rate'=>5]]])->assertRedirect(route('purchases.index'));
         $this->assertDatabaseHas('purchase_bills', ['bill_number' => 'BILL-001', 'total' => 21]);
         $this->assertDatabaseHas('stock_movements', ['product_id' => $product->id, 'quantity' => 10, 'type' => 'receipt']);
+        $this->assertDatabaseHas('journal_entries', ['company_id'=>$company->id, 'source_type'=>'purchase_bill']);
     }
 
     public function test_supplier_payment_updates_purchase_bill_balance(): void
@@ -36,5 +37,6 @@ class PurchaseWorkflowTest extends TestCase
 
         $this->assertDatabaseHas('supplier_payments', ['purchase_bill_id'=>$bill->id, 'amount'=>50, 'reference'=>'TRX-100']);
         $this->assertDatabaseHas('purchase_bills', ['id'=>$bill->id, 'paid_total'=>50, 'balance_due'=>55, 'status'=>'partially_paid']);
+        $this->assertDatabaseHas('journal_entries', ['company_id'=>$company->id, 'source_type'=>'supplier_payment']);
     }
 }

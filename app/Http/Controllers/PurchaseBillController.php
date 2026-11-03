@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\PurchaseBill;
 use App\Models\StockMovement;
 use App\Models\Supplier;
+use App\Services\AccountingPostingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -29,7 +30,7 @@ class PurchaseBillController extends Controller
             $total=round($subtotal+$vat,3);
             $bill=PurchaseBill::create(['company_id'=>$company->id,'supplier_id'=>$supplier->id,'bill_number'=>$data['bill_number'],'bill_date'=>$data['bill_date'],'due_date'=>$data['due_date'] ?? now()->parse($data['bill_date'])->addDays($supplier->payment_terms_days),'status'=>'received','currency'=>$company->currency ?: 'OMR','subtotal'=>$subtotal,'vat_total'=>$vat,'total'=>$total,'paid_total'=>0,'balance_due'=>$total,'notes'=>$data['notes'] ?? null]);
             foreach($prepared as [$item,$line,$lineVat,$index]) { $product=null; if(!empty($item['product_id'])) $product=Product::where('company_id',$company->id)->findOrFail($item['product_id']); $bill->items()->create(['product_id'=>$product?->id,'sort_order'=>$index,'description'=>$item['description'],'quantity'=>$item['quantity'],'unit'=>$item['unit'],'unit_cost'=>$item['unit_cost'],'vat_rate'=>$item['vat_rate'],'line_subtotal'=>$line,'line_vat'=>$lineVat,'line_total'=>$line+$lineVat]); if($product?->type==='product') StockMovement::create(['company_id'=>$company->id,'product_id'=>$product->id,'type'=>'receipt','quantity'=>$item['quantity'],'unit_cost'=>$item['unit_cost'],'movement_date'=>$data['bill_date'],'reference'=>$data['bill_number'],'notes'=>'Received from '.$supplier->name,'created_by'=>auth()->id()]); }
-            return $bill;
+            app(AccountingPostingService::class)->postPurchaseBill($bill); return $bill;
         });
         return redirect()->route('purchases.index')->with('success', 'Purchase bill '.$bill->bill_number.' recorded. Stock quantities were updated for product lines.');
     }
@@ -38,7 +39,7 @@ class PurchaseBillController extends Controller
     {
         $this->authorizeBill($purchase);
         $data=$request->validate(['payment_date'=>'required|date','amount'=>'required|numeric|gt:0|lte:'.$purchase->balance_due,'method'=>'required|in:cash,bank_transfer,card,cheque,other','reference'=>'nullable|string|max:100','notes'=>'nullable|string']);
-        DB::transaction(function () use ($purchase, $data) { $purchase->payments()->create($data+['company_id'=>$purchase->company_id]); $paid=(float)$purchase->payments()->sum('amount'); $balance=round(max(0,(float)$purchase->total-$paid),3); $purchase->update(['paid_total'=>$paid,'balance_due'=>$balance,'status'=>$balance <= .000?'paid':'partially_paid']); });
+        DB::transaction(function () use ($purchase, $data) { $payment=$purchase->payments()->create($data+['company_id'=>$purchase->company_id]); $paid=(float)$purchase->payments()->sum('amount'); $balance=round(max(0,(float)$purchase->total-$paid),3); $purchase->update(['paid_total'=>$paid,'balance_due'=>$balance,'status'=>$balance <= .000?'paid':'partially_paid']); app(AccountingPostingService::class)->postSupplierPayment($payment); });
         return back()->with('success','Supplier payment recorded and bill balance updated.');
     }
 

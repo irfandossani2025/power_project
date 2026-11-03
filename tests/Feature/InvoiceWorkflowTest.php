@@ -26,7 +26,10 @@ class InvoiceWorkflowTest extends TestCase
         $this->assertNotNull($invoice);
         $this->assertSame('issued', $invoice->status);
         $this->assertSame('105.000', $invoice->balance_due);
+        $this->assertDatabaseHas('journal_entries', ['company_id'=>$company->id, 'source_type'=>'invoice', 'source_id'=>$invoice->id]);
+        $this->assertDatabaseHas('journal_lines', ['account_id'=>\App\Models\Account::where('company_id',$company->id)->where('code','1100')->value('id'), 'debit'=>105]);
         $this->actingAs($user)->post(route('invoices.payments.store', $invoice), ['payment_date'=>now()->format('Y-m-d'),'amount'=>105,'method'=>'bank_transfer'])->assertRedirect();
         $this->assertSame('paid', $invoice->fresh()->status);
+        $this->assertDatabaseHas('journal_entries', ['company_id'=>$company->id, 'source_type'=>'customer_payment']);
     }
 }

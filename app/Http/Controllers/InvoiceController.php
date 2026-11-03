@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\ResolvesCompany;
 use App\Models\Invoice;
 use App\Models\Quotation;
+use App\Services\AccountingPostingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +24,7 @@ class InvoiceController extends Controller
             $existing = Invoice::where('quotation_id', $quotation->id)->first(); if ($existing) return $existing;
             $invoice = Invoice::create(['company_id'=>$company->id,'customer_id'=>$quotation->customer_id,'quotation_id'=>$quotation->id,'invoice_number'=>$this->nextNumber($company->id),'invoice_date'=>now(),'due_date'=>now()->addDays($quotation->customer->payment_terms_days),'status'=>'issued','currency'=>$quotation->currency,'subtotal'=>$quotation->subtotal,'discount_total'=>$quotation->discount_total,'vat_total'=>$quotation->vat_total,'total'=>$quotation->total,'paid_total'=>0,'balance_due'=>$quotation->total,'notes'=>$quotation->notes,'terms'=>$quotation->terms]);
             foreach ($quotation->items as $item) $invoice->items()->create($item->only(['product_id','sort_order','description','quantity','unit','unit_price','discount_percentage','vat_rate','line_subtotal','line_vat','line_total']));
-            $quotation->update(['status'=>'converted']); return $invoice;
+            $quotation->update(['status'=>'converted']); app(AccountingPostingService::class)->postInvoice($invoice); return $invoice;
         });
         return redirect()->route('invoices.show', $invoice)->with('success', 'Sales invoice '.$invoice->invoice_number.' is ready.');
     }
@@ -32,7 +33,7 @@ class InvoiceController extends Controller
     {
         $this->authorizeInvoice($invoice);
         $data = $request->validate(['payment_date'=>'required|date','amount'=>'required|numeric|gt:0|lte:'.$invoice->balance_due,'method'=>'required|in:cash,bank_transfer,card,cheque,other','reference'=>'nullable|string|max:100','notes'=>'nullable|string']);
-        DB::transaction(function () use ($invoice, $data) { $invoice->payments()->create($data + ['company_id'=>$invoice->company_id]); $paid=(float)$invoice->payments()->sum('amount'); $balance=round(max(0,(float)$invoice->total-$paid),3); $invoice->update(['paid_total'=>$paid,'balance_due'=>$balance,'status'=>$balance <= 0.000?'paid':'partially_paid']); });
+        DB::transaction(function () use ($invoice, $data) { $payment=$invoice->payments()->create($data + ['company_id'=>$invoice->company_id]); $paid=(float)$invoice->payments()->sum('amount'); $balance=round(max(0,(float)$invoice->total-$paid),3); $invoice->update(['paid_total'=>$paid,'balance_due'=>$balance,'status'=>$balance <= 0.000?'paid':'partially_paid']); app(AccountingPostingService::class)->postCustomerPayment($payment); });
         return back()->with('success', 'Payment recorded and invoice balance updated.');
     }
 

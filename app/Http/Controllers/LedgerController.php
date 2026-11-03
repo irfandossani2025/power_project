@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\ResolvesCompany;
 use App\Models\Account;
 use App\Models\JournalEntry;
+use App\Services\AccountingPostingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +15,7 @@ class LedgerController extends Controller
 
     public function index()
     {
-        $company=$this->company(); $this->ensureStarterAccounts($company->id);
+        $company=$this->company(); app(AccountingPostingService::class)->ensureAccounts($company->id);
         $accounts=Account::where('company_id',$company->id)->withSum('journalLines as debit_total','debit')->withSum('journalLines as credit_total','credit')->orderBy('code')->get();
         $trialBalance=$accounts->map(function (Account $account) { $debits=(float)($account->debit_total ?? 0); $credits=(float)($account->credit_total ?? 0); return ['account'=>$account,'debits'=>$debits,'credits'=>$credits,'net_debit'=>max(0,$debits-$credits),'net_credit'=>max(0,$credits-$debits)]; });
         return view('ledger.index',['company'=>$company,'accounts'=>$accounts,'trialBalance'=>$trialBalance,'trialDebitTotal'=>$trialBalance->sum('net_debit'),'trialCreditTotal'=>$trialBalance->sum('net_credit'),'entries'=>JournalEntry::where('company_id',$company->id)->with('lines.account')->latest('entry_date')->latest('id')->paginate(12)]);
@@ -31,7 +32,7 @@ class LedgerController extends Controller
 
     public function storeEntry(Request $request)
     {
-        $company=$this->company(); $this->ensureStarterAccounts($company->id);
+        $company=$this->company(); app(AccountingPostingService::class)->ensureAccounts($company->id);
         $data=$request->validate(['entry_date'=>'required|date','reference'=>'nullable|string|max:100','memo'=>'nullable|string','lines'=>'required|array|min:2','lines.*.account_id'=>'required|integer','lines.*.description'=>'nullable|string|max:1000','lines.*.debit'=>'nullable|numeric|min:0','lines.*.credit'=>'nullable|numeric|min:0']);
         $debits=round(collect($data['lines'])->sum(fn($line)=>(float)($line['debit'] ?? 0)),3); $credits=round(collect($data['lines'])->sum(fn($line)=>(float)($line['credit'] ?? 0)),3);
         if($debits <= 0 || abs($debits-$credits) > .0005) return back()->withErrors(['lines'=>'Journal entries must balance: total debits and credits must be equal and greater than zero.'])->withInput();
@@ -41,8 +42,4 @@ class LedgerController extends Controller
         return back()->with('success','Balanced journal entry recorded.');
     }
 
-    private function ensureStarterAccounts(int $companyId): void
-    {
-        foreach ([['1000','Cash and bank','asset'],['1100','Accounts receivable','asset'],['1200','Inventory','asset'],['2000','Accounts payable','liability'],['2100','VAT payable','liability'],['3000','Owner equity','equity'],['4000','Sales revenue','income'],['5000','Cost of sales','expense'],['6000','Operating expenses','expense']] as [$code,$name,$type]) Account::firstOrCreate(['company_id'=>$companyId,'code'=>$code],['name'=>$name,'type'=>$type,'is_active'=>true]);
-    }
 }

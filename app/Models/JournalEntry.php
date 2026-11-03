@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class JournalEntry extends Model
 {
-    protected $fillable=['company_id','entry_number','entry_date','reference','memo','created_by'];
+    protected $fillable=['company_id','source_type','source_id','entry_number','entry_date','reference','memo','created_by'];
     protected function casts(): array { return ['entry_date'=>'date']; }
     public function company(): BelongsTo { return $this->belongsTo(Company::class); }
     public function lines(): HasMany { return $this->hasMany(JournalLine::class); }

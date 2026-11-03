@@ -67,4 +67,14 @@ class ImportWorkflowTest extends TestCase
         $this->assertDatabaseHas('journal_entries',['source_type'=>'purchase_bill']); $this->assertDatabaseHas('journal_entries',['source_type'=>'supplier_payment']);
         $this->assertDatabaseHas('import_batches',['type'=>'historical_bills','imported_count'=>1]);
     }
+
+    public function test_invalid_historical_invoice_is_fully_rolled_back_and_audited(): void
+    {
+        Company::create(['name'=>'My Business']); $user=User::factory()->create();
+        $csv="invoice_number,invoice_date,due_date,customer_email,customer_name,line_description,quantity,unit,unit_price,discount_percentage,vat_rate,payment_amount,payment_date,payment_method,payment_reference\nQB-BAD-1,2025-12-15,2026-01-14,bad@example.com,Bad Import,Consulting,1,service,100,0,5,200,2025-12-15,bank_transfer,QB-RCPT-BAD\n";
+        $this->actingAs($user)->post(route('imports.store'),['type'=>'historical_invoices','file'=>UploadedFile::fake()->createWithContent('bad-invoice.csv',$csv)])->assertRedirect(route('imports.index'));
+        $this->assertDatabaseMissing('invoices',['invoice_number'=>'QB-BAD-1']);
+        $this->assertDatabaseMissing('customers',['email'=>'bad@example.com']);
+        $this->assertDatabaseHas('import_batches',['type'=>'historical_invoices','imported_count'=>0,'skipped_count'=>1]);
+    }
 }

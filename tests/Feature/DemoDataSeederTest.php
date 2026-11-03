@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Company;
+use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\Product;
 use App\Models\PurchaseBill;
 use App\Models\Quotation;
 use App\Models\StockMovement;
@@ -42,5 +45,18 @@ class DemoDataSeederTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->seed(DemoDataSeeder::class);
+    }
+
+    public function test_it_preserves_existing_directory_setup_before_seeding_demo_transactions(): void
+    {
+        Customer::create(['company_id' => Company::create(['name' => 'My Business'])->id, 'name' => 'Existing customer']);
+        Product::create(['company_id' => Company::firstOrFail()->id, 'name' => 'Existing item', 'type' => 'product', 'unit' => 'pcs']);
+
+        $this->seed(DemoDataSeeder::class);
+
+        $this->assertDatabaseHas('customers', ['name' => 'Existing customer']);
+        $this->assertDatabaseHas('products', ['name' => 'Existing item']);
+        $this->assertDatabaseCount('invoices', 1);
+        $this->assertDatabaseCount('purchase_bills', 1);
     }
 }

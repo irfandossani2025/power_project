@@ -23,33 +23,33 @@ class DemoDataSeeder extends Seeder
 {
     public function run(): void
     {
-        if (Customer::exists() || Product::exists() || Invoice::exists() || PurchaseBill::exists() || Expense::exists()) {
-            throw new RuntimeException('Demo data was not added because operational records already exist.');
+        if (Invoice::exists() || PurchaseBill::exists() || Expense::exists() || Quotation::exists() || StockMovement::exists()) {
+            throw new RuntimeException('Demo data was not added because transactional records already exist.');
         }
 
         DB::transaction(function (): void {
             $company = Company::firstOrCreate(['name' => 'My Business'], ['legal_name' => 'My Business', 'currency' => 'OMR']);
             $user = User::first();
             $today = now()->startOfDay();
-            $warehouse = Warehouse::create(['company_id' => $company->id, 'name' => 'Muscat Main Store', 'code' => 'MCT-01', 'address' => 'Muscat, Sultanate of Oman', 'is_active' => true]);
+            $warehouse = Warehouse::firstOrCreate(['company_id' => $company->id, 'code' => 'MCT-01'], ['name' => 'Muscat Main Store', 'address' => 'Muscat, Sultanate of Oman', 'is_active' => true]);
 
             $customers = collect([
                 ['name' => 'Aisha Al Balushi', 'company_name' => 'Al Noor Interiors LLC', 'email' => 'aisha@alnoor-demo.om', 'phone' => '+968 9211 0401'],
                 ['name' => 'Khalid Al Habsi', 'company_name' => 'Nizwa Facilities', 'email' => 'khalid@nizwa-demo.om', 'phone' => '+968 9211 0402'],
                 ['name' => 'Mariam Al Lawati', 'company_name' => 'Seeb Hospitality', 'email' => 'mariam@seeb-demo.om', 'phone' => '+968 9211 0403'],
-            ])->map(fn (array $data) => Customer::create($data + ['company_id' => $company->id, 'vat_number' => 'OM-DEMO-'.str_pad((string) random_int(1, 999), 3, '0', STR_PAD_LEFT), 'billing_address' => 'Muscat, Sultanate of Oman', 'payment_terms_days' => 30, 'credit_limit' => 2000, 'is_active' => true]));
+            ])->map(fn (array $data, int $index) => Customer::firstOrCreate(['company_id' => $company->id, 'email' => $data['email']], $data + ['company_id' => $company->id, 'vat_number' => 'OM-DEMO-'.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT), 'billing_address' => 'Muscat, Sultanate of Oman', 'payment_terms_days' => 30, 'credit_limit' => 2000, 'is_active' => true]));
 
             $suppliers = collect([
                 ['name' => 'Saeed Al Riyami', 'company_name' => 'Oman Electrical Supplies', 'email' => 'sales@oman-electrical-demo.om', 'phone' => '+968 9411 0501'],
                 ['name' => 'Fatma Al Hinai', 'company_name' => 'Gulf Office Solutions', 'email' => 'orders@gulf-office-demo.om', 'phone' => '+968 9411 0502'],
-            ])->map(fn (array $data) => Supplier::create($data + ['company_id' => $company->id, 'vat_number' => 'OM-SUP-'.str_pad((string) random_int(1, 999), 3, '0', STR_PAD_LEFT), 'billing_address' => 'Muscat, Sultanate of Oman', 'payment_terms_days' => 30, 'is_active' => true]));
+            ])->map(fn (array $data, int $index) => Supplier::firstOrCreate(['company_id' => $company->id, 'email' => $data['email']], $data + ['company_id' => $company->id, 'vat_number' => 'OM-SUP-'.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT), 'billing_address' => 'Muscat, Sultanate of Oman', 'payment_terms_days' => 30, 'is_active' => true]));
 
             $products = collect([
                 ['sku' => 'LED-18W', 'name' => 'LED Panel Light 18W', 'description' => 'Recessed cool-white LED panel', 'type' => 'product', 'unit' => 'pcs', 'cost_price' => 15, 'selling_price' => 25, 'reorder_level' => 12],
                 ['sku' => 'CBL-2.5', 'name' => 'Copper Cable 2.5mm', 'description' => 'Electrical cable coil', 'type' => 'product', 'unit' => 'roll', 'cost_price' => 18, 'selling_price' => 30, 'reorder_level' => 8],
                 ['sku' => 'SW-1G', 'name' => 'Switch 1 Gang', 'description' => 'White wall switch', 'type' => 'product', 'unit' => 'pcs', 'cost_price' => 2.2, 'selling_price' => 4.5, 'reorder_level' => 20],
                 ['sku' => 'INSTALL', 'name' => 'Electrical installation', 'description' => 'Professional installation service', 'type' => 'service', 'unit' => 'job', 'cost_price' => 0, 'selling_price' => 85, 'reorder_level' => 0],
-            ])->map(fn (array $data) => Product::create($data + ['company_id' => $company->id, 'vat_rate' => 5, 'is_active' => true]));
+            ])->map(fn (array $data) => Product::firstOrCreate(['company_id' => $company->id, 'sku' => $data['sku']], $data + ['company_id' => $company->id, 'vat_rate' => 5, 'is_active' => true]));
 
             foreach ([[$products[0], 8], [$products[1], 5], [$products[2], 42]] as [$product, $quantity]) {
                 StockMovement::create(['company_id' => $company->id, 'product_id' => $product->id, 'warehouse_id' => $warehouse->id, 'type' => 'opening', 'quantity' => $quantity, 'unit_cost' => $product->cost_price, 'movement_date' => $today->copy()->subDays(14), 'reference' => 'DEMO-OPEN', 'notes' => 'Demo opening stock', 'created_by' => $user?->id]);

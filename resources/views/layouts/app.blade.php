@@ -32,6 +32,7 @@
             <a class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}" href="{{ route('suppliers.index') }}"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c.7-4 2.7-6 6-6 1.1 0 2 .2 2.8.7M16 8h5M18.5 5.5v5"/></svg></span><span>Suppliers</span></a>
             <a class="{{ request()->routeIs('products.*') ? 'active' : '' }}" href="{{ route('products.index') }}"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="m4 7 8-4 8 4-8 4zM4 7v10l8 4 8-4V7M12 11v10"/></svg></span><span>Items</span></a>
             <a class="{{ request()->routeIs('inventory.*') ? 'active' : '' }}" href="{{ route('inventory.index') }}"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 8h18v12H3zM7 8V5h10v3M7 13h10M7 17h6"/></svg></span><span>Inventory</span></a>
+            <a class="{{ request()->routeIs('projects.*') ? 'active' : '' }}" href="{{ route('projects.index') }}"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 20V5h16v15H4zM8 9h8M8 13h5M8 20v-3h3v3M16 20v-5h2v5"/></svg></span><span>Projects</span></a>
             @if(auth()->user()->role==='admin')
                 <p style="margin-top:18px">ADMIN</p>
                 <a class="{{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2"/><path d="M3 20c.7-4 2.7-6 6-6s5.3 2 6 6M15 15c3 0 5 1.7 5.7 5"/></svg></span><span>Team access</span></a>

@@ -9,6 +9,7 @@ use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PurchaseBillController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuotationController;
@@ -26,6 +27,7 @@ Route::middleware(['auth','active'])->group(function () {
     Route::resource('customers', CustomerController::class)->except('show');
     Route::resource('expenses', ExpenseController::class)->except('show');
     Route::resource('products', ProductController::class)->except('show');
+    Route::resource('projects', ProjectController::class);
     Route::resource('suppliers', SupplierController::class)->except('show');
     Route::get('/purchases', [PurchaseBillController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/create', [PurchaseBillController::class, 'create'])->name('purchases.create');

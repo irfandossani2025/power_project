@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Quotation;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Models\Project;
 use App\Http\Controllers\Concerns\ResolvesCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -99,6 +100,7 @@ class QuotationController extends Controller
             'company' => $company,
             'customers' => Customer::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get(),
             'products' => Product::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->get(),
+            'projects' => Project::where('company_id', $company->id)->whereNotIn('status', ['completed', 'cancelled'])->orderBy('name')->get(),
             'quoteItems' => $quotation->items->map(fn ($item) => [
                 'product_id' => $item->product_id,
                 'description' => $item->description,
@@ -112,10 +114,13 @@ class QuotationController extends Controller
     }
     private function validated(Request $request): array
     {
-        $data = $request->validate(['customer_id' => 'required|integer', 'quotation_date' => 'required|date', 'valid_until' => 'nullable|date|after_or_equal:quotation_date', 'status' => 'required|in:draft,sent,accepted,rejected,expired', 'notes' => 'nullable|string', 'terms' => 'nullable|string', 'items' => 'required|array|min:1', 'items.*.description' => 'required|string|max:191', 'items.*.quantity' => 'required|numeric|gt:0', 'items.*.unit' => 'required|string|max:20', 'items.*.unit_price' => 'required|numeric|min:0', 'items.*.discount_percentage' => 'nullable|numeric|min:0|max:100', 'items.*.vat_rate' => 'nullable|numeric|min:0|max:100', 'items.*.product_id' => 'nullable|integer']);
+        $data = $request->validate(['customer_id' => 'required|integer', 'project_id' => 'nullable|integer', 'quotation_date' => 'required|date', 'valid_until' => 'nullable|date|after_or_equal:quotation_date', 'status' => 'required|in:draft,sent,accepted,rejected,expired', 'notes' => 'nullable|string', 'terms' => 'nullable|string', 'items' => 'required|array|min:1', 'items.*.description' => 'required|string|max:191', 'items.*.quantity' => 'required|numeric|gt:0', 'items.*.unit' => 'required|string|max:20', 'items.*.unit_price' => 'required|numeric|min:0', 'items.*.discount_percentage' => 'nullable|numeric|min:0|max:100', 'items.*.vat_rate' => 'nullable|numeric|min:0|max:100', 'items.*.product_id' => 'nullable|integer']);
         $company = $this->company();
         if (! Customer::where('company_id', $company->id)->whereKey($data['customer_id'])->exists()) {
             throw ValidationException::withMessages(['customer_id' => 'Please select a customer from this business.']);
+        }
+        if (! empty($data['project_id']) && ! Project::where('company_id', $company->id)->where('customer_id', $data['customer_id'])->whereKey($data['project_id'])->exists()) {
+            throw ValidationException::withMessages(['project_id' => 'Please select a project for the selected customer.']);
         }
         $productIds = collect($data['items'])->pluck('product_id')->filter()->unique();
         if ($productIds->isNotEmpty() && Product::where('company_id', $company->id)->whereIn('id', $productIds)->count() !== $productIds->count()) {

@@ -7,8 +7,8 @@
     <title>{{ config('app.name', 'PowerBooks') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/powerbooks.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/powerbooks-extra.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/powerbooks.css').'?v='.filemtime(public_path('css/powerbooks.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/powerbooks-extra.css').'?v='.filemtime(public_path('css/powerbooks-extra.css')) }}">
 </head>
 <body>
 @php($role = auth()->user()->role)
@@ -63,6 +63,6 @@
         <a class="buddy-full-link" href="{{ route('finance-buddy.index') }}">Open full Finance Buddy workspace →</a>
     </section>
 </aside>
-<script src="{{ asset('js/powerbooks.js') }}"></script>
+<script src="{{ asset('js/powerbooks.js').'?v='.filemtime(public_path('js/powerbooks.js')) }}"></script>
 </body>
 </html>

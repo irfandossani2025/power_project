@@ -27,17 +27,39 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/finance-buddy', [FinanceBuddyController::class, 'index'])->name('finance-buddy.index');
     Route::post('/finance-buddy/ask', [FinanceBuddyController::class, 'ask'])->name('finance-buddy.ask');
-    Route::resource('customers', CustomerController::class)->except('show');
-    Route::resource('expenses', ExpenseController::class)->except('show');
-    Route::resource('products', ProductController::class)->except('show');
-    Route::resource('projects', ProjectController::class);
-    Route::resource('suppliers', SupplierController::class)->except('show');
-    Route::get('/purchases', [PurchaseBillController::class, 'index'])->name('purchases.index');
-    Route::get('/purchases/create', [PurchaseBillController::class, 'create'])->name('purchases.create');
-    Route::post('/purchases', [PurchaseBillController::class, 'store'])->name('purchases.store');
-    Route::get('/purchases/{purchase}', [PurchaseBillController::class, 'show'])->name('purchases.show');
-    Route::post('/purchases/{purchase}/payments', [PurchaseBillController::class, 'recordPayment'])->name('purchases.payments.store');
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
+    Route::middleware('role:admin,accountant,sales')->group(function () {
+        Route::resource('customers', CustomerController::class)->except('show');
+        Route::resource('quotations', QuotationController::class);
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+        Route::post('/quotations/{quotation}/invoice', [InvoiceController::class, 'fromQuotation'])->name('quotations.invoice');
+    });
+
+    Route::middleware('role:admin,accountant,inventory')->group(function () {
+        Route::resource('products', ProductController::class)->except('show');
+        Route::resource('suppliers', SupplierController::class)->except('show');
+        Route::get('/purchases', [PurchaseBillController::class, 'index'])->name('purchases.index');
+        Route::get('/purchases/create', [PurchaseBillController::class, 'create'])->name('purchases.create');
+        Route::post('/purchases', [PurchaseBillController::class, 'store'])->name('purchases.store');
+        Route::get('/purchases/{purchase}', [PurchaseBillController::class, 'show'])->name('purchases.show');
+        Route::post('/inventory/movements', [InventoryController::class, 'store'])->name('inventory.movements.store');
+        Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
+    });
+
+    Route::middleware('role:admin,accountant,sales,inventory')->group(function () {
+        Route::resource('projects', ProjectController::class);
+    });
+
+    Route::middleware('role:admin,accountant')->group(function () {
+        Route::resource('expenses', ExpenseController::class)->except('show');
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments.store');
+        Route::post('/purchases/{purchase}/payments', [PurchaseBillController::class, 'recordPayment'])->name('purchases.payments.store');
+        Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
+        Route::get('/imports/templates/{type}', [ImportController::class, 'template'])->name('imports.template');
+        Route::post('/imports', [ImportController::class, 'store'])->name('imports.store');
+    });
     Route::middleware('role:admin,accountant')->group(function () {
         Route::get('/ledger', [LedgerController::class, 'index'])->name('ledger.index');
         Route::post('/ledger/accounts', [LedgerController::class, 'storeAccount'])->name('ledger.accounts.store');
@@ -52,16 +74,6 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
         Route::patch('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
     });
-    Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
-    Route::get('/imports/templates/{type}', [ImportController::class, 'template'])->name('imports.template');
-    Route::post('/imports', [ImportController::class, 'store'])->name('imports.store');
-    Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
-    Route::post('/inventory/movements', [InventoryController::class, 'store'])->name('inventory.movements.store');
-    Route::resource('quotations', QuotationController::class);
-    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-    Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
-    Route::post('/quotations/{quotation}/invoice', [InvoiceController::class, 'fromQuotation'])->name('quotations.invoice');
-    Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments.store');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

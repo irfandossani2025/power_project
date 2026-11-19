@@ -29,6 +29,10 @@ class FinanceBuddyController extends Controller
         $result['prompt'] = $data['prompt'];
         AiActivityLog::create(['company_id' => $company->id, 'user_id' => $request->user()->id, 'provider' => $result['provider'], 'action' => 'assistant_request', 'prompt' => $data['prompt'], 'response' => $result['answer'], 'context_snapshot' => $result['context'], 'suggested_actions' => $result['actions'], 'status' => $result['status'], 'approval_required' => $result['status'] === 'needs_review']);
 
+        if ($request->expectsJson()) {
+            return response()->json($result);
+        }
+
         return redirect()->route('finance-buddy.index')->with('buddy_response', $result);
     }
 

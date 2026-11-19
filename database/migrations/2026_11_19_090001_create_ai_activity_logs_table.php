@@ -16,8 +16,11 @@ return new class extends Migration
             $table->string('action', 80)->default('answer');
             $table->text('prompt');
             $table->longText('response')->nullable();
-            $table->json('context_snapshot')->nullable();
-            $table->json('suggested_actions')->nullable();
+            // MariaDB 10.1 (the production server) does not support the JSON
+            // column type. Laravel's array cast stores the same JSON payload
+            // safely in LONGTEXT while retaining compatibility with newer DBs.
+            $table->longText('context_snapshot')->nullable();
+            $table->longText('suggested_actions')->nullable();
             $table->enum('status', ['completed', 'needs_review', 'failed'])->default('completed');
             $table->boolean('approval_required')->default(false);
             $table->timestamp('approved_at')->nullable();

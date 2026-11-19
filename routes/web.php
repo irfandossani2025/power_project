@@ -1,17 +1,18 @@
 <?php
 
-use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CompanySettingsController;
-use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\FinanceBuddyController;
+use App\Http\Controllers\ImportController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LedgerController;
-use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PurchaseBillController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
@@ -22,8 +23,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::middleware(['auth','active'])->group(function () {
+Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/finance-buddy', [FinanceBuddyController::class, 'index'])->name('finance-buddy.index');
+    Route::post('/finance-buddy/ask', [FinanceBuddyController::class, 'ask'])->name('finance-buddy.ask');
     Route::resource('customers', CustomerController::class)->except('show');
     Route::resource('expenses', ExpenseController::class)->except('show');
     Route::resource('products', ProductController::class)->except('show');
@@ -41,6 +44,8 @@ Route::middleware(['auth','active'])->group(function () {
         Route::post('/ledger/entries', [LedgerController::class, 'storeEntry'])->name('ledger.entries.store');
     });
     Route::middleware('role:admin')->group(function () {
+        Route::get('/settings/finance-buddy', [FinanceBuddyController::class, 'settings'])->name('settings.finance-buddy.edit');
+        Route::patch('/settings/finance-buddy', [FinanceBuddyController::class, 'updateSettings'])->name('settings.finance-buddy.update');
         Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company.edit');
         Route::patch('/settings/company', [CompanySettingsController::class, 'update'])->name('settings.company.update');
         Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');

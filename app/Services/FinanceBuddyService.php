@@ -70,7 +70,15 @@ class FinanceBuddyService
         $actions = [];
         $status = 'completed';
 
-        if (str_contains($question, 'overdue') || str_contains($question, 'receivable') || str_contains($question, 'invoice')) {
+        if (str_contains($question, 'vendor') || str_contains($question, 'supplier')) {
+            if (in_array($user->role, ['admin', 'accountant', 'inventory'], true)) {
+                $answer = 'In PowerBooks, vendors are managed as suppliers. I have prepared the Add Supplier workflow for you. Enter the vendor contact details, payment terms, VAT number and address, then review and save the supplier record.';
+                $actions[] = ['label' => 'Create supplier draft', 'url' => route('suppliers.create'), 'type' => 'draft'];
+                $status = 'needs_review';
+            } else {
+                $answer = 'Vendor records are managed in Suppliers. Your current role does not have permission to create or view supplier records. Please ask an administrator, accountant or inventory user to add the vendor.';
+            }
+        } elseif (str_contains($question, 'overdue') || str_contains($question, 'receivable') || str_contains($question, 'invoice')) {
             $answer = isset($context['receivables_omr'])
                 ? "There are {$context['overdue_invoices']} overdue invoice(s) and open receivables of {$currency} ".number_format((float) $context['receivables_omr'], 3).'. I have not changed any records.'
                 : 'Your role does not have permission to view receivables or overdue invoice amounts. Please ask an administrator or accountant to review this.';

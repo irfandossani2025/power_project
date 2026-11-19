@@ -49,4 +49,16 @@ class FinanceBuddyTest extends TestCase
 
         $this->actingAs($staff)->get(route('settings.finance-buddy.edit'))->assertForbidden();
     }
+
+    public function test_buddy_translates_vendor_into_supplier_creation_workflow(): void
+    {
+        Company::create(['name' => 'Power Trading', 'currency' => 'OMR']);
+        $inventoryUser = User::factory()->create(['role' => 'inventory']);
+
+        $this->actingAs($inventoryUser)
+            ->post(route('finance-buddy.ask'), ['prompt' => 'Please create a new vendor for electrical supplies'])
+            ->assertRedirect(route('finance-buddy.index'))
+            ->assertSessionHas('buddy_response.actions.0.label', 'Create supplier draft')
+            ->assertSessionHas('buddy_response.actions.0.url', route('suppliers.create'));
+    }
 }

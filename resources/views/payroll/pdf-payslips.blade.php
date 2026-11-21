@@ -1,1 +1,0 @@
-<!doctype html><html><head><meta charset="utf-8"><style>@page{margin:0}body{margin:0}.page{page-break-after:always;padding:22px 28px}.page:last-child{page-break-after:auto}</style></head><body>@foreach($entries as $entry)<div class="page">@include('payroll.pdf-payslip',['company'=>$company,'payroll'=>$payroll,'entry'=>$entry])</div>@endforeach</body></html>

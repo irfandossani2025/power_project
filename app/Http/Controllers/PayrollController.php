@@ -8,7 +8,6 @@ use App\Models\EmployeeCompensation;
 use App\Models\PayrollEntry;
 use App\Models\PayrollRun;
 use App\Models\PayrollSetting;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class PayrollController extends Controller
@@ -128,26 +127,6 @@ class PayrollController extends Controller
         return view('payroll.payslip', ['company' => $this->company(), 'payroll' => $payroll, 'entry' => $entry]);
     }
 
-    public function downloadPayslip(PayrollRun $payroll, PayrollEntry $entry)
-    {
-        $this->ensureRun($payroll);
-        abort_unless($entry->payroll_run_id === $payroll->id, 404);
-
-        return Pdf::loadView('payroll.pdf-payslip', ['company' => $this->company(), 'payroll' => $payroll, 'entry' => $entry])
-            ->setPaper('a4')
-            ->download($this->payslipFilename($payroll, $entry));
-    }
-
-    public function downloadAllPayslips(PayrollRun $payroll)
-    {
-        $this->ensureRun($payroll);
-        $entries = $payroll->entries()->orderBy('employee_name')->get();
-
-        return Pdf::loadView('payroll.pdf-payslips', ['company' => $this->company(), 'payroll' => $payroll, 'entries' => $entries])
-            ->setPaper('a4')
-            ->download(sprintf('payslips-%04d-%02d.pdf', $payroll->period_year, $payroll->period_month));
-    }
-
     public function export(PayrollRun $payroll)
     {
         $this->ensureRun($payroll);
@@ -178,10 +157,5 @@ class PayrollController extends Controller
     private function ensureRun(PayrollRun $p): void
     {
         abort_unless($p->company_id === $this->company()->id, 404);
-    }
-
-    private function payslipFilename(PayrollRun $payroll, PayrollEntry $entry): string
-    {
-        return sprintf('payslip-%s-%04d-%02d.pdf', $entry->employee_number, $payroll->period_year, $payroll->period_month);
     }
 }

@@ -78,6 +78,14 @@ class FinanceBuddyService
             } else {
                 $answer = 'Vendor records are managed in Suppliers. Your current role does not have permission to create or view supplier records. Please ask an administrator, accountant or inventory user to add the vendor.';
             }
+        } elseif (str_contains($question, 'payroll') || str_contains($question, 'payslip') || str_contains($question, 'salary')) {
+            if (in_array($user->role, ['admin', 'accountant'], true)) {
+                $answer = 'I can take you to Payroll. Start a monthly draft from saved employee salary profiles, review additions and deductions, then approve to lock it. Payment still happens separately in Bank Muscat.';
+                $actions[] = ['label' => 'Open payroll', 'url' => route('payroll.index'), 'type' => 'review'];
+                $actions[] = ['label' => 'Start payroll draft', 'url' => route('payroll.create'), 'type' => 'draft'];
+            } else {
+                $answer = 'Your current role does not have access to payroll or employee salary information.';
+            }
         } elseif (str_contains($question, 'employee') || str_contains($question, 'visa') || str_contains($question, 'passport') || str_contains($question, 'resident card') || str_contains($question, 'omani id')) {
             if (in_array($user->role, ['admin', 'accountant'], true)) {
                 $answer = 'I can take you to HRMS to add or review employee records, including visa, resident card, passport and Omani ID expiry dates. Every expiry is included in the dashboard compliance alerts for the next 60 days.';

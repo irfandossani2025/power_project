@@ -12,4 +12,9 @@ class Employee extends Model
     {
         return ['is_omani' => 'boolean', 'is_active' => 'boolean', 'joining_date' => 'date', 'visa_expiry_date' => 'date', 'resident_card_expiry_date' => 'date', 'passport_expiry_date' => 'date', 'omani_id_expiry_date' => 'date'];
     }
+
+    public function compensation()
+    {
+        return $this->hasOne(EmployeeCompensation::class);
+    }
 }

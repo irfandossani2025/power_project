@@ -10,6 +10,7 @@ use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LedgerController;
+use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
@@ -56,6 +57,16 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     Route::middleware('role:admin,accountant')->group(function () {
         Route::resource('employees', EmployeeController::class)->except('show', 'destroy');
+        Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+        Route::get('/payroll/create', [PayrollController::class, 'create'])->name('payroll.create');
+        Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
+        Route::get('/payroll/{payroll}', [PayrollController::class, 'show'])->name('payroll.show');
+        Route::patch('/payroll/{payroll}/entries/{entry}', [PayrollController::class, 'updateEntry'])->name('payroll.entries.update');
+        Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
+        Route::get('/payroll/{payroll}/entries/{entry}/payslip', [PayrollController::class, 'payslip'])->name('payroll.payslip');
+        Route::get('/payroll/{payroll}/bank-muscat-export', [PayrollController::class, 'export'])->name('payroll.export');
+        Route::get('/employees/{employee}/compensation', [PayrollController::class, 'compensation'])->name('payroll.compensation');
+        Route::patch('/employees/{employee}/compensation', [PayrollController::class, 'updateCompensation'])->name('payroll.compensation.update');
         Route::resource('expenses', ExpenseController::class)->except('show');
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments.store');
@@ -70,6 +81,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/ledger/entries', [LedgerController::class, 'storeEntry'])->name('ledger.entries.store');
     });
     Route::middleware('role:admin')->group(function () {
+        Route::get('/settings/payroll', [PayrollController::class, 'settings'])->name('payroll.settings');
+        Route::patch('/settings/payroll', [PayrollController::class, 'updateSettings'])->name('payroll.settings.update');
         Route::get('/settings/finance-buddy', [FinanceBuddyController::class, 'settings'])->name('settings.finance-buddy.edit');
         Route::patch('/settings/finance-buddy', [FinanceBuddyController::class, 'updateSettings'])->name('settings.finance-buddy.update');
         Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company.edit');

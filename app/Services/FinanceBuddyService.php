@@ -78,6 +78,22 @@ class FinanceBuddyService
             } else {
                 $answer = 'Vendor records are managed in Suppliers. Your current role does not have permission to create or view supplier records. Please ask an administrator, accountant or inventory user to add the vendor.';
             }
+        } elseif (str_contains($question, 'employee') || str_contains($question, 'visa') || str_contains($question, 'passport') || str_contains($question, 'resident card') || str_contains($question, 'omani id')) {
+            if (in_array($user->role, ['admin', 'accountant'], true)) {
+                $answer = 'I can take you to HRMS to add or review employee records, including visa, resident card, passport and Omani ID expiry dates. Every expiry is included in the dashboard compliance alerts for the next 60 days.';
+                $actions[] = ['label' => 'Open HRMS employees', 'url' => route('employees.index'), 'type' => 'review'];
+                $actions[] = ['label' => 'Add employee', 'url' => route('employees.create'), 'type' => 'draft'];
+            } else {
+                $answer = 'Your current role does not have access to HRMS employee records.';
+            }
+        } elseif (str_contains($question, 'vehicle') || str_contains($question, 'mulkiya') || str_contains($question, 'insurance') || str_contains($question, 'inspection')) {
+            if (in_array($user->role, ['admin', 'accountant', 'inventory'], true)) {
+                $answer = 'I can take you to Vehicle Tracking to add or review company vehicles. Mulkiya, insurance and inspection expiry dates are included in the dashboard compliance alerts for the next 60 days.';
+                $actions[] = ['label' => 'Open vehicles', 'url' => route('vehicles.index'), 'type' => 'review'];
+                $actions[] = ['label' => 'Add vehicle', 'url' => route('vehicles.create'), 'type' => 'draft'];
+            } else {
+                $answer = 'Your current role does not have access to company vehicle records.';
+            }
         } elseif (str_contains($question, 'overdue') || str_contains($question, 'receivable') || str_contains($question, 'invoice')) {
             $answer = isset($context['receivables_omr'])
                 ? "There are {$context['overdue_invoices']} overdue invoice(s) and open receivables of {$currency} ".number_format((float) $context['receivables_omr'], 3).'. I have not changed any records.'

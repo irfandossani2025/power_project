@@ -3,6 +3,7 @@
 use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FinanceBuddyController;
 use App\Http\Controllers\ImportController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -45,6 +47,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/purchases/{purchase}', [PurchaseBillController::class, 'show'])->name('purchases.show');
         Route::post('/inventory/movements', [InventoryController::class, 'store'])->name('inventory.movements.store');
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
+        Route::resource('vehicles', VehicleController::class)->except('show', 'destroy');
     });
 
     Route::middleware('role:admin,accountant,sales,inventory')->group(function () {
@@ -52,6 +55,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
 
     Route::middleware('role:admin,accountant')->group(function () {
+        Route::resource('employees', EmployeeController::class)->except('show', 'destroy');
         Route::resource('expenses', ExpenseController::class)->except('show');
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments.store');

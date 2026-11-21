@@ -64,6 +64,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('/payroll/{payroll}/entries/{entry}', [PayrollController::class, 'updateEntry'])->name('payroll.entries.update');
         Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
         Route::get('/payroll/{payroll}/entries/{entry}/payslip', [PayrollController::class, 'payslip'])->name('payroll.payslip');
+        Route::get('/payroll/{payroll}/payslips/print', [PayrollController::class, 'printPayslips'])->name('payroll.payslips.print');
         Route::get('/payroll/{payroll}/bank-muscat-export', [PayrollController::class, 'export'])->name('payroll.export');
         Route::get('/employees/{employee}/compensation', [PayrollController::class, 'compensation'])->name('payroll.compensation');
         Route::patch('/employees/{employee}/compensation', [PayrollController::class, 'updateCompensation'])->name('payroll.compensation.update');

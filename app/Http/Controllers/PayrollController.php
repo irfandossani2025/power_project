@@ -127,6 +127,19 @@ class PayrollController extends Controller
         return view('payroll.payslip', ['company' => $this->company(), 'payroll' => $payroll, 'entry' => $entry]);
     }
 
+    public function printPayslips(PayrollRun $payroll)
+    {
+        $this->ensureRun($payroll);
+
+        if ($payroll->status !== 'approved') {
+            return redirect()->route('payroll.show', $payroll)->with('success', 'Approve and lock this payroll before preparing the complete payslip PDF.');
+        }
+
+        $payroll->load('entries');
+
+        return view('payroll.payslips-print', ['company' => $this->company(), 'payroll' => $payroll]);
+    }
+
     public function export(PayrollRun $payroll)
     {
         $this->ensureRun($payroll);

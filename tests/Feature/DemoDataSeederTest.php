@@ -4,13 +4,17 @@ namespace Tests\Feature;
 
 use App\Models\Company;
 use App\Models\Customer;
+use App\Models\Employee;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\PayrollRun;
 use App\Models\Product;
 use App\Models\PurchaseBill;
 use App\Models\Quotation;
 use App\Models\StockMovement;
+use App\Models\Vehicle;
 use Database\Seeders\DemoDataSeeder;
+use Database\Seeders\DemoHrmsPayrollSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
 use Tests\TestCase;
@@ -58,5 +62,18 @@ class DemoDataSeederTest extends TestCase
         $this->assertDatabaseHas('products', ['name' => 'Existing item']);
         $this->assertDatabaseCount('invoices', 1);
         $this->assertDatabaseCount('purchase_bills', 1);
+    }
+
+    public function test_it_adds_hrms_payroll_and_vehicle_demo_data_without_touching_transactions(): void
+    {
+        Company::create(['name' => 'My Business']);
+        $this->seed(DemoHrmsPayrollSeeder::class);
+
+        $this->assertDatabaseCount('employees', 3);
+        $this->assertDatabaseCount('vehicles', 2);
+        $this->assertDatabaseCount('payroll_runs', 1);
+        $this->assertSame(3, PayrollRun::firstOrFail()->entries()->count());
+        $this->assertTrue(Employee::where('employee_number', 'DEMO-EMP-001')->exists());
+        $this->assertTrue(Vehicle::where('vehicle_number', 'DEMO-VEH-001')->exists());
     }
 }

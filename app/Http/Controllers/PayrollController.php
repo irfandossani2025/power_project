@@ -130,9 +130,15 @@ class PayrollController extends Controller
     public function export(PayrollRun $payroll)
     {
         $this->ensureRun($payroll);
-        abort_unless($payroll->status === 'approved', 422);
+        if ($payroll->status !== 'approved') {
+            return redirect()->route('payroll.show', $payroll)->with('success', 'Approve and lock this payroll before preparing the Bank Muscat salary review file. No bank file has been created.');
+        }
+
         $setting = PayrollSetting::firstOrCreate(['company_id' => $payroll->company_id]);
-        abort_unless($setting->bank_profile_confirmed, 422, 'Confirm the Bank Muscat profile after checking your corporate portal before exporting.');
+        if (! $setting->bank_profile_confirmed) {
+            return redirect()->route('payroll.settings')->with('success', 'Confirm the Bank Muscat payroll profile after checking your corporate portal, then return here to prepare the salary review file.');
+        }
+
         $rows = $payroll->entries()->with('employee.compensation')->get();
 
         return response()->streamDownload(function () use ($rows) {

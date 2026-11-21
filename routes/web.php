@@ -81,6 +81,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/ledger/entries', [LedgerController::class, 'storeEntry'])->name('ledger.entries.store');
     });
     Route::middleware('role:admin')->group(function () {
+        Route::get('/payroll/{payroll}/entries/{entry}/payslip.pdf', [PayrollController::class, 'downloadPayslip'])->name('payroll.payslip.download');
+        Route::get('/payroll/{payroll}/payslips.pdf', [PayrollController::class, 'downloadAllPayslips'])->name('payroll.payslips.download-all');
         Route::get('/settings/payroll', [PayrollController::class, 'settings'])->name('payroll.settings');
         Route::patch('/settings/payroll', [PayrollController::class, 'updateSettings'])->name('payroll.settings.update');
         Route::get('/settings/finance-buddy', [FinanceBuddyController::class, 'settings'])->name('settings.finance-buddy.edit');
